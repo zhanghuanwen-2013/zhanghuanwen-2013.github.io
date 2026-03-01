@@ -1,0 +1,454 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codeforces提交查询系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 500;
+        }
+        
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .problem-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .problem-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .problem-input input {
+            flex: 1;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            color: #3498db;
+            font-size: 16px;
+        }
+        
+        .error-msg {
+            color: #e74c3c;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .success-msg {
+            color: #27ae60;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .records-section {
+            margin-bottom: 30px;
+            display: none;
+        }
+        
+        .section-title {
+            color: #34495e;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .records-table th,
+        .records-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .records-table th {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .records-table tr:hover {
+            background-color: #f8fbff;
+        }
+        
+        .status-accepted {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .status-wrong {
+            color: #e74c3c;
+        }
+        
+        .status-other {
+            color: #95a5a6;
+        }
+        
+        .first-blood {
+            background-color: #fef9e7;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .first-blood p {
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .first-blood p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .no-data {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px;
+            font-size: 16px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Codeforces提交查询系统</h1>
+        
+        <!-- 输入表单区域 -->
+        <div class="form-section">
+            <div class="form-group">
+                <label for="handles">用户名（多用户用英文逗号分隔）</label>
+                <input type="text" id="handles" placeholder="例如：zzx741,zhanghuanwen">
+            </div>
+            
+            <div class="form-group">
+                <label for="days">查询天数</label>
+                <input type="number" id="days" min="1" value="365" placeholder="默认365天">
+            </div>
+            
+            <div class="form-group">
+                <label>题目列表（格式：比赛ID 题目编号，最多6题）</label>
+                <div class="problem-inputs" id="problemInputs">
+                    <div class="problem-input">
+                        <input type="text" placeholder="例如：1 A" class="problem">
+                    </div>
+                    <div class="problem-input">
+                        <input type="text" placeholder="例如：1 B" class="problem">
+                    </div>
+                    <div class="problem-input">
+                        <input type="text" placeholder="例如：2 C" class="problem">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="success-msg" id="successMsg"></div>
+            <div class="loading" id="loading">🔄 正在查询Codeforces数据，请稍候...</div>
+            
+            <button id="submitBtn">执行查询</button>
+        </div>
+        
+        <!-- 提交记录区域 -->
+        <div class="records-section" id="recordsSection">
+            <h2 class="section-title">提交记录</h2>
+            <table class="records-table">
+                <thead>
+                    <tr>
+                        <th>提交时间</th>
+                        <th>用户名</th>
+                        <th>题目</th>
+                        <th>状态</th>
+                        <th>首杀标记</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsBody">
+                    <!-- 动态填充 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 首杀汇总区域 -->
+        <div class="records-section" id="firstBloodSection">
+            <h2 class="section-title">首杀汇总</h2>
+            <div class="first-blood" id="firstBloodBody">
+                <!-- 动态填充 -->
+            </div>
+        </div>
+        
+        <!-- 无数据提示 -->
+        <div class="no-data" id="noData">
+            暂无查询结果，请先执行有效查询
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const handlesInput = document.getElementById('handles');
+        const daysInput = document.getElementById('days');
+        const problemInputs = document.querySelectorAll('.problem');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        const recordsSection = document.getElementById('recordsSection');
+        const firstBloodSection = document.getElementById('firstBloodSection');
+        const recordsBody = document.getElementById('recordsBody');
+        const firstBloodBody = document.getElementById('firstBloodBody');
+        const noData = document.getElementById('noData');
+
+        // 提交查询
+        submitBtn.addEventListener('click', async () => {
+            // 清空提示
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            recordsSection.style.display = 'none';
+            firstBloodSection.style.display = 'none';
+            noData.style.display = 'none';
+
+            // 验证输入
+            const handles = handlesInput.value.trim();
+            const days = daysInput.value.trim();
+            const problems = Array.from(problemInputs)
+                .map(input => input.value.trim())
+                .filter(p => p);
+
+            if (!handles) {
+                showError('用户名不能为空！');
+                return;
+            }
+            if (!days || isNaN(days) || days < 1) {
+                showError('查询天数必须是大于0的整数！');
+                return;
+            }
+            if (problems.length === 0) {
+                showError('至少输入一道题目！');
+                return;
+            }
+
+            // 禁用按钮，显示加载
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+
+            try {
+                // 调用后端接口
+                const response = await fetch('/run-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        handles,
+                        days: parseInt(days),
+                        problems
+                    })
+                });
+
+                const result = await response.json();
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+
+                if (result.success) {
+                    showSuccess('查询成功！正在加载结果...');
+                    // 延迟获取结果（确保文件生成完成）
+                    setTimeout(() => {
+                        loadStatusResult();
+                    }, 2000);
+                } else {
+                    showError(result.msg);
+                }
+            } catch (e) {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+                showError(`网络错误：${e.message}`);
+            }
+        });
+
+        // 加载status.txt结果
+        async function loadStatusResult() {
+            try {
+                const response = await fetch('/get-status');
+                const result = await response.json();
+
+                if (result.success) {
+                    parseAndShowContent(result.content);
+                } else {
+                    showError(result.msg);
+                    noData.style.display = 'block';
+                }
+            } catch (e) {
+                showError(`加载结果失败：${e.message}`);
+            }
+        }
+
+        // 解析并展示内容
+        function parseAndShowContent(content) {
+            // 清空原有内容
+            recordsBody.innerHTML = '';
+            firstBloodBody.innerHTML = '';
+
+            // 分割行并过滤空行
+            const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+            
+            if (lines.length === 0) {
+                noData.style.display = 'block';
+                return;
+            }
+
+            // 分离提交记录和首杀汇总
+            const records = [];
+            const firstBlood = [];
+            
+            lines.forEach(line => {
+                if (line.includes('|')) {
+                    records.push(line);
+                } else if (line.includes(':') && /^\w+:\s/.test(line)) {
+                    firstBlood.push(line);
+                }
+            });
+
+            // 展示提交记录
+            if (records.length > 0) {
+                recordsSection.style.display = 'block';
+                records.forEach(record => {
+                    const parts = record.split('|').map(part => part.trim());
+                    if (parts.length >= 4) {
+                        const time = parts[0];
+                        const user = parts[1];
+                        const problem = parts[2];
+                        const statusWithTag = parts[3].split(/(\+|-)$/);
+                        const status = statusWithTag[0].trim();
+                        const tag = statusWithTag[1] || '';
+
+                        let statusClass = '';
+                        if (status === 'Accepted') {
+                            statusClass = 'status-accepted';
+                        } else if (status === 'Wrong Answer' || status === 'Hacked') {
+                            statusClass = 'status-wrong';
+                        } else {
+                            statusClass = 'status-other';
+                        }
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${time}</td>
+                            <td>${user}</td>
+                            <td>${problem}</td>
+                            <td class="${statusClass}">${status}</td>
+                            <td>${tag}</td>
+                        `;
+                        recordsBody.appendChild(tr);
+                    }
+                });
+            }
+
+            // 展示首杀汇总
+            if (firstBlood.length > 0) {
+                firstBloodSection.style.display = 'block';
+                firstBlood.forEach(item => {
+                    const p = document.createElement('p');
+                    p.textContent = item;
+                    firstBloodBody.appendChild(p);
+                });
+            }
+
+            // 无数据处理
+            if (records.length === 0 && firstBlood.length === 0) {
+                noData.style.display = 'block';
+            }
+        }
+
+        // 显示错误提示
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+        }
+
+        // 显示成功提示
+        function showSuccess(msg) {
+            successMsg.textContent = msg;
+            successMsg.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+2011-07-14 19:28:55 | tourist              | 1A     | Accepted           +
+2025-03-25 20:36:50 | zzx741               | 1A     | Wrong Answer       -
+2025-03-25 20:37:23 | zzx741               | 1A     | Accepted           -
+2026-01-10 22:12:09 | zhanghuanwen         | 1A     | Wrong Answer       -
+2026-01-10 22:13:35 | zhanghuanwen         | 1A     | Wrong Answer       -
+2026-01-10 22:14:50 | zhanghuanwen         | 1A     | Accepted           -
+
+1A: tourist 2011-07-14 19:28:55
